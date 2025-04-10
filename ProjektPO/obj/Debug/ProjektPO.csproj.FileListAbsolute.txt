@@ -1,0 +1,7 @@
+C:\Users\antos\OneDrive\Dokumenty\ZSK\ProjektPO\bin\Debug\ProjektPO.exe.config
+C:\Users\antos\OneDrive\Dokumenty\ZSK\ProjektPO\bin\Debug\ProjektPO.exe
+C:\Users\antos\OneDrive\Dokumenty\ZSK\ProjektPO\bin\Debug\ProjektPO.pdb
+C:\Users\antos\OneDrive\Dokumenty\ZSK\ProjektPO\obj\Debug\ProjektPO.csproj.AssemblyReference.cache
+C:\Users\antos\OneDrive\Dokumenty\ZSK\ProjektPO\obj\Debug\ProjektPO.csproj.CoreCompileInputs.cache
+C:\Users\antos\OneDrive\Dokumenty\ZSK\ProjektPO\obj\Debug\ProjektPO.exe
+C:\Users\antos\OneDrive\Dokumenty\ZSK\ProjektPO\obj\Debug\ProjektPO.pdb
