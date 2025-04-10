@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using static KsiegarniaApp.Program;
 
 namespace KsiegarniaApp
 {
@@ -54,7 +55,7 @@ namespace KsiegarniaApp
                 {
                     if (value < 0)
                         throw new ArgumentException("Ilość książek nie może być mniejsza od 0");
-                    _cena = value;
+                    _ilosc = value;
                 }
             }
 
@@ -118,7 +119,7 @@ namespace KsiegarniaApp
                 switch (choice)
                 {
                     case 1:
-                        Ksiegarnia.Instance.DisplayInfo();
+                        Console.WriteLine(Ksiegarnia.Instance.DisplayInfo());
                         Console.WriteLine("Podaj tytuł książki, którą chcecz dokupić: ");
                         string title = Console.ReadLine();
                         foreach (var book in Ksiegarnia.Instance.Books)
@@ -135,28 +136,107 @@ namespace KsiegarniaApp
                         Console.WriteLine($"Nie ma książki o tytule \"{title}\"");
                         break;
                     case 2:
-                        Book book = new Book();
+                        Book newbook = new Book();
                         try
                         {
-                            Console.WriteLine("Podaj tytuł książki, którą chcecz kupić: ");
-                            book.Tytul = Console.ReadLine();
+                            Console.WriteLine("\nPodaj tytuł książki, którą chcecz kupić: ");
+                            newbook.Tytul = Console.ReadLine();
+                            Console.WriteLine("\nPodaj autora książki, którą chcecz kupić: ");
+                            newbook.Autor = Console.ReadLine();
+                            Console.WriteLine("\nPodaj cenę książki, którą chcecz kupić: ");
+                            double.TryParse(Console.ReadLine(), out double cena);
+                            newbook.Cena = cena;
+                            Console.WriteLine($"\nPodaj ile książek o tytule {newbook.Tytul}, chcecz kupić: ");
+                            newbook.Ilosc = int.Parse(Console.ReadLine());
+                            OnPowiadomienie($"Dodano {newbook.Ilosc} książkek \"{newbook.Tytul}\" {newbook.Autor} w cenie {newbook.Cena}");
                         }
                         catch (ArgumentException e)
                         {
                             Console.WriteLine("Błąd: "+e.Message);
                         }
 
+                        break;
+                    default:
+                        Console.WriteLine("Nieznana opcja");
+                        return;
                 }
-
-                
             }
             public void RemoveBook()
             {
-                //Do zrobienia
+                Console.WriteLine(Ksiegarnia.Instance.DisplayInfo());
+                Console.WriteLine("Podaj tytuł książki, którą chcecz usunąć: ");
+                string title = Console.ReadLine();
+                foreach (var book in Ksiegarnia.Instance.Books)
+                {
+                    if (book.Tytul.ToLower() == title.ToLower())
+                    {
+                        Console.WriteLine($"Podaj ile książek \"{book.Tytul}\" {book.Autor} chcesz sprzedać: ");
+                        int howMany = GetIntInput();
+                        if (howMany > book.Ilosc)
+                        {
+                            Console.WriteLine("Nie można usunąć więcej książek niż ich jest");
+                            return;
+                        }
+                        book.Ilosc -= howMany;
+                        OnPowiadomienie($"Usunięto {howMany} książkek \"{book.Tytul}\"");
+                        return;
+                    }
+                }
+                Console.WriteLine($"Nie ma książki o tytule \"{title}\"");
             }
             public void EditBook()
             {
-                //Do zrobienia
+                Console.WriteLine(Ksiegarnia.Instance.DisplayInfo());
+                Console.WriteLine("Podaj tytuł książki, w której chcecz coś zmienić: ");
+                string title = Console.ReadLine();
+                foreach (var book in Ksiegarnia.Instance.Books)
+                {
+                    try
+                    {
+                        if (book.Tytul.ToLower() == title.ToLower())
+                        {
+                            Console.WriteLine($"Podaj co chcesz zmienić w tej książce: ");
+                            Console.WriteLine($"\t1. Tytuł ");
+                            Console.WriteLine($"\t2. Autora ");
+                            Console.WriteLine($"\t3. Cenę ");
+                            int choice = GetIntInput();
+                            switch (choice)
+                            {
+                                case 1:
+                                    Console.WriteLine($"\nObecny tytuł: {book.Tytul}\nPodaj na jaki tytuł chcesz go zmienić:");
+                                    string title2 = Console.ReadLine();
+                                    book.Tytul = title2;
+                                    OnPowiadomienie($"Zmieniono tytuł książki \"{title}\" na \"{title2}\"");
+                                    return;
+                                case 2:
+                                    Console.WriteLine($"\nObecny autor: {book.Autor}\nPodaj na jakiego autora chcesz go zmienić:");
+                                    string autor = Console.ReadLine();
+                                    string oldAutor = book.Autor;
+                                    book.Autor = autor;
+                                    OnPowiadomienie($"Zmieniono autora książki \"{title}\" z {oldAutor} na {autor}");
+                                    return;
+                                case 3:
+                                    Console.WriteLine($"\nObecna cena: {book.Cena:C}\nPodaj na jaką cenę chcesz ją zmienić:");
+                                    double cena;
+                                    double.TryParse(Console.ReadLine(), out cena);
+                                    double oldCena = book.Cena;
+                                    book.Cena = cena;
+                                    OnPowiadomienie($"Zmieniono cenę książki \"{title}\" z {oldCena:C} na {cena:C}");
+                                    return;
+                                default:
+                                    Console.WriteLine("Nieznana opcja");
+                                    return;
+                            }
+                        }
+                    }
+                    catch (ArgumentException e)
+                    {
+                        Console.WriteLine("Błąd: " + e.Message);
+                        return;
+                    }
+                    
+                }
+                Console.WriteLine($"Nie ma książki o tytule \"{title}\"");
             }
             public void BuyBook()
             {
