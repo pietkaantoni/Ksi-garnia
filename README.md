@@ -1,2 +1,2 @@
-# Ksi-garnia
+# Ksiegarnia
 Projekt, który symuluje księgarnię
