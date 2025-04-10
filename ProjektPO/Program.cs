@@ -3,193 +3,233 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 namespace KsiegarniaApp
 {
-    //dostępne role w programie
-    public enum Role
-    {
-        Admin,
-        Worker,
-        Client
-    }
-    //dostępne uprawnienia w programie
-    public enum Permission
-    {
-        ManageUsers,
-        AddBook,
-        RemoveBook,
-        EditBook,
-        ShowBooks,
-        BuyBook,
-    }
-    public interface IInfo
-    {
-        string DisplayInfo();
-    }
-    public class Book : IInfo
-    {
-        private double _cena;
-        private int _ilosc;
-        public string Tytul { get; set; }
-        public string Autor { get; set; }
-        public double Cena
-        {
-            get { return _cena; }
-            set
-            {
-                if (value <= 0)
-                    throw new ArgumentException("Cena nie może być mniejsza lub równa 0");
-                _cena = value;
-            }
-        }
-        public int Ilosc
-        {
-            get { return _ilosc; }
-            set
-            {
-                if (value < 0)
-                    throw new ArgumentException("Ilość książek nie może być mniejsza od 0");
-                _cena = value;
-            }
-        }
-
-        public Book(string tytul, string autor, double cena, int ilosc)
-        {
-            Tytul = tytul;
-            Autor = autor;
-            Cena = cena;
-            Ilosc = ilosc;
-        }
-        public string DisplayInfo()
-        {
-            return ($"\"{Tytul}\" {Autor}, kosztuje: {Cena}");
-        }
-    }
-    // Delegat i Event
-    public delegate void PowiadomienieEventHandler(object sender, string message);
-    public class Osoba : IInfo
-    {
-        public string Username { get; set; }
-        public List<Role> Roles;
-        public List<Book> BoughtBooks { get; set; } = new List<Book>();
-
-
-        public event PowiadomienieEventHandler Powiadomienie;
-        protected virtual void OnPowiadomienie(string message)
-        {
-            Powiadomienie?.Invoke(this, message);
-        }
-
-        public Osoba(string imie)
-        {
-            Username = imie;
-            Roles = new List<Role>();
-        }
-        public string DisplayInfo()
-        {
-            string output = $"Nazwa użytkownika: {Username}, posiadane role: ";
-            foreach (Role role in Roles)
-            {
-                output += $"{role}, ";
-            }
-            return output;
-        }
-        public void KupioneKsiazki()
-        {
-            Console.WriteLine("Historia kupowania:");
-            foreach (var k in BoughtBooks)
-            {
-                Console.WriteLine($"\t - {k.DisplayInfo()}");
-            }
-        }
-
-        public void AddBook()
-        {
-            //Do zrobienia
-        }
-        public void RemoveBook()
-        {
-            //Do zrobienia
-        }
-        public void EditBook()
-        {
-            //Do zrobienia
-        }
-        public void BuyBook()
-        {
-            //Do zrobienia
-        }
-        public void ManageUsers()
-        {
-            //Do zrobienia
-        }
-    }
-    
-    public class Ksiegarnia : IInfo
-    {
-        private static Ksiegarnia _instance;
-        public static Ksiegarnia Instance
-        {
-            get
-            {
-                if (_instance == null)
-                {
-                    _instance = new Ksiegarnia();
-                }
-                return _instance;
-            }
-        }
-
-        public List<Book> Books { get; set; } = new List<Book>();
-
-        public string DisplayInfo()
-        {
-            string output = $"Księgarnia, tytuły posiadanych książek:";
-            foreach (Book book in Books)
-            {
-                output += $"\n - \"{book.Tytul}\", cena: {book.Cena:C}, liczba książek w księgarni: {book.Ilosc}";
-            }
-            return output;
-        }
-
-        private Ksiegarnia() //Dodać tutaj śćiąganie książek z bazy danych
-        {
-            // Inicjalizacja przykładowych książek w pamięci
-            Books.Add(new Book("Wiedźmin", "Andrzej Sapkowski", 29.99d, 100));
-            Books.Add(new Book("Lalka", "Bolesław Prus", 39.98d, 28));
-            Books.Add(new Book("Pan Tadeusz", "Adam Mickiewicz", 12.50d, 13));
-        }
-    }
-    //RBAC
-    public class RBAC
-    {
-        private readonly Dictionary<Role, List<Permission>> _rolePermissions; 
-        public RBAC()
-        {
-            _rolePermissions = new Dictionary<Role, List<Permission>>
-                {
-                    { Role.Admin, new List<Permission> {Permission.ManageUsers, Permission.AddBook, Permission.RemoveBook, Permission.EditBook, Permission.ShowBooks} },
-                    { Role.Worker, new List<Permission> {Permission.AddBook, Permission.RemoveBook, Permission.EditBook, Permission.ShowBooks} },
-                    { Role.Client, new List<Permission> {Permission.ShowBooks, Permission.BuyBook} },
-                };
-        }
-
-        public bool HasPermission(Osoba user, Permission permission)
-        {
-            foreach (var role in user.Roles)
-            {
-                if (_rolePermissions.ContainsKey(role) && _rolePermissions[role].Contains(permission))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-    }
     public class Program
     {
+        //dostępne role w programie
+        public enum Role
+        {
+            Admin,
+            Worker,
+            Client
+        }
+        //dostępne uprawnienia w programie
+        public enum Permission
+        {
+            ManageUsers,
+            AddBook,
+            RemoveBook,
+            EditBook,
+            ShowBooks,
+            BuyBook,
+        }
+        public interface IInfo
+        {
+            string DisplayInfo();
+        }
+        public class Book : IInfo
+        {
+            private double _cena;
+            private int _ilosc;
+            public string Tytul { get; set; }
+            public string Autor { get; set; }
+            public double Cena
+            {
+                get { return _cena; }
+                set
+                {
+                    if (value <= 0)
+                        throw new ArgumentException("Cena nie może być mniejsza lub równa 0");
+                    _cena = value;
+                }
+            }
+            public int Ilosc
+            {
+                get { return _ilosc; }
+                set
+                {
+                    if (value < 0)
+                        throw new ArgumentException("Ilość książek nie może być mniejsza od 0");
+                    _cena = value;
+                }
+            }
+
+            public Book() { }
+            public Book(string tytul, string autor, double cena, int ilosc)
+            {
+                Tytul = tytul;
+                Autor = autor;
+                Cena = cena;
+                Ilosc = ilosc;
+            }
+            public string DisplayInfo()
+            {
+                return ($"\"{Tytul}\" {Autor}, kosztuje: {Cena}");
+            }
+        }
+        // Delegat i Event
+        public delegate void PowiadomienieEventHandler(object sender, string message);
+        public class Osoba : IInfo
+        {
+            public string Username { get; set; }
+            public List<Role> Roles;
+            public List<Book> BoughtBooks { get; set; } = new List<Book>();
+
+
+            public event PowiadomienieEventHandler Powiadomienie;
+            protected virtual void OnPowiadomienie(string message)
+            {
+                Powiadomienie?.Invoke(this, message);
+            }
+
+            public Osoba(string imie)
+            {
+                Username = imie;
+                Roles = new List<Role>();
+            }
+            public string DisplayInfo()
+            {
+                string output = $"Nazwa użytkownika: {Username}, posiadane role: ";
+                foreach (Role role in Roles)
+                {
+                    output += $"{role}, ";
+                }
+                return output;
+            }
+            public void KupioneKsiazki()
+            {
+                Console.WriteLine("Historia kupowania:");
+                foreach (var k in BoughtBooks)
+                {
+                    Console.WriteLine($"\t - {k.DisplayInfo()}");
+                }
+            }
+
+            public void AddBook()
+            {
+                Console.WriteLine($"\nWybierz kolejną opcję:");
+                Console.WriteLine($"\t1. Dokupić instniejącą książkę");
+                Console.WriteLine($"\t2. Kupić nową książkę");
+                int choice = GetIntInput();
+                switch (choice)
+                {
+                    case 1:
+                        Ksiegarnia.Instance.DisplayInfo();
+                        Console.WriteLine("Podaj tytuł książki, którą chcecz dokupić: ");
+                        string title = Console.ReadLine();
+                        foreach (var book in Ksiegarnia.Instance.Books)
+                        {
+                            if(book.Tytul.ToLower() == title.ToLower())
+                            {
+                                Console.WriteLine($"Podaj ile książek \"{book.Tytul}\" {book.Autor} chcesz dokupić: ");
+                                int howMany = GetIntInput();
+                                book.Ilosc += howMany;
+                                OnPowiadomienie($"Dodano {howMany} książkek \"{book.Tytul}\"");
+                                return;
+                            }
+                        }
+                        Console.WriteLine($"Nie ma książki o tytule \"{title}\"");
+                        break;
+                    case 2:
+                        Book book = new Book();
+                        try
+                        {
+                            Console.WriteLine("Podaj tytuł książki, którą chcecz kupić: ");
+                            book.Tytul = Console.ReadLine();
+                        }
+                        catch (ArgumentException e)
+                        {
+                            Console.WriteLine("Błąd: "+e.Message);
+                        }
+
+                }
+
+                
+            }
+            public void RemoveBook()
+            {
+                //Do zrobienia
+            }
+            public void EditBook()
+            {
+                //Do zrobienia
+            }
+            public void BuyBook()
+            {
+                //Do zrobienia
+            }
+            public void ManageUsers()
+            {
+                //Do zrobienia
+            }
+        }
+    
+        public class Ksiegarnia : IInfo
+        {
+            private static Ksiegarnia _instance;
+            public static Ksiegarnia Instance
+            {
+                get
+                {
+                    if (_instance == null)
+                    {
+                        _instance = new Ksiegarnia();
+                    }
+                    return _instance;
+                }
+            }
+
+            public List<Book> Books { get; set; } = new List<Book>();
+
+            public string DisplayInfo()
+            {
+                string output = $"Księgarnia, tytuły posiadanych książek:";
+                foreach (Book book in Books)
+                {
+                    output += $"\n - \"{book.Tytul}\", cena: {book.Cena:C}, liczba książek w księgarni: {book.Ilosc}";
+                }
+                return output;
+            }
+
+            private Ksiegarnia() //Dodać tutaj śćiąganie książek z bazy danych
+            {
+                // Inicjalizacja przykładowych książek w pamięci
+                Books.Add(new Book("Wiedźmin", "Andrzej Sapkowski", 29.99d, 100));
+                Books.Add(new Book("Lalka", "Bolesław Prus", 39.98d, 28));
+                Books.Add(new Book("Pan Tadeusz", "Adam Mickiewicz", 12.50d, 13));
+            }
+        }
+        //RBAC
+        public class RBAC
+        {
+            private readonly Dictionary<Role, List<Permission>> _rolePermissions; 
+            public RBAC()
+            {
+                _rolePermissions = new Dictionary<Role, List<Permission>>
+                    {
+                        { Role.Admin, new List<Permission> {Permission.ManageUsers, Permission.AddBook, Permission.RemoveBook, Permission.EditBook, Permission.ShowBooks} },
+                        { Role.Worker, new List<Permission> {Permission.AddBook, Permission.RemoveBook, Permission.EditBook, Permission.ShowBooks} },
+                        { Role.Client, new List<Permission> {Permission.ShowBooks, Permission.BuyBook} },
+                    };
+            }
+
+            public bool HasPermission(Osoba user, Permission permission)
+            {
+                foreach (var role in user.Roles)
+                {
+                    if (_rolePermissions.ContainsKey(role) && _rolePermissions[role].Contains(permission))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+    
         //funkcja zmieniająca kolor tekstu, często ją używam i ona przyśpieszy mi pisanie kodu
         public static void ChangeColor(string message, ConsoleColor color)
         {
